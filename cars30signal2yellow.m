@@ -70,12 +70,23 @@ for t = 1 : 400  % Simulation time
 
     % Car logic uses the same state variables
     for n = 1:numCars
-        % Signal 1 logic
+        stop_for_signal = false;
+        stop_positions = [];
+        stop_velocities = [];
+        % Check signal 1
         if X(n) < 300 && (strcmp(signal1_state, 'red') || strcmp(signal1_state, 'yellow')) && (X(n) > 300-10)
-            A(n) = IDM(X(n), V(n), 300, 0);
-        % Signal 2 logic (after passing first signal)
-        elseif X(n) > 320 && X(n) < 600 && (strcmp(signal2_state, 'red') || strcmp(signal2_state, 'yellow')) && (X(n) > 600-10)
-            A(n) = IDM(X(n), V(n), 600, 0);
+            stop_positions(end+1) = 300;
+            stop_velocities(end+1) = 0;
+        end
+        % Check signal 2
+        if X(n) < 600 && (strcmp(signal2_state, 'red') || strcmp(signal2_state, 'yellow')) && (X(n) > 600-10)
+            stop_positions(end+1) = 600;
+            stop_velocities(end+1) = 0;
+        end
+        if ~isempty(stop_positions)
+            % Stop for the nearest signal ahead
+            [min_pos, idx] = min(stop_positions);
+            A(n) = IDM(X(n), V(n), min_pos, stop_velocities(idx));
         elseif n == 1
             % Lead car, no car in front
             A(n) = IDM(X(n), V(n), X(n)+1000, 20);
