@@ -49,26 +49,17 @@ for t = 1 : 200  % Simulation time
     end
 
     % Second traffic signal x=600
-    % Signal 1 cycles every 40 steps (20s red, 20s green)
-    if mod(t, 80) <= 40 && mod(t, 80) ~= 0
-        % Signal is red
-        A(1) = IDM(X(1), V(1), 300, 0);
-        set(p_signal1, 'MarkerFaceColor', 'r');
-    else
-        % Signal is green
-        set(p_signal1, 'MarkerFaceColor', 'g');
-    end
-
-    % Signal 2 cycles every 40 steps as well (20s red, 20s green)
-    if mod(t, 80) <= 40 && mod(t, 80) ~= 0 && X(1) > 320
-        % Signal is red and affects lead car after it passed signal 1
-        A(1) = IDM(X(1), V(1), 600, 0);
+    if (X(1) > 320 && t <= 150)
+        A(1) = IDM(X(1), V(1), 600, 0);  % Red until t=150
         set(p_signal2, 'MarkerFaceColor', 'r');
     else
-        % Signal is green
-        set(p_signal2, 'MarkerFaceColor', 'g');
+        set(p_signal2, 'MarkerFaceColor', 'g');  % Green after t=150
     end
 
+    % Acceleration for all following cars
+    for n = 2 : numCars
+        A(n) = IDM(X(n), V(n), X(n - 1), V(n - 1));
+    end
 
     % Positions and velocities for all cars
     for n = 1 : numCars
