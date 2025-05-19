@@ -70,16 +70,15 @@ for t = 1 : 400  % Simulation time
 
     % Car logic uses the same state variables
     for n = 1:numCars
-        stop_for_signal = false;
         stop_positions = [];
         stop_velocities = [];
         % Check signal 1
-        if X(n) < 300 && (strcmp(signal1_state, 'red') || strcmp(signal1_state, 'yellow')) && (X(n) > 300-10)
+        if X(n) < 300 && (strcmp(signal1_state, 'red') || strcmp(signal1_state, 'yellow'))
             stop_positions(end+1) = 300;
             stop_velocities(end+1) = 0;
         end
         % Check signal 2
-        if X(n) < 600 && (strcmp(signal2_state, 'red') || strcmp(signal2_state, 'yellow')) && (X(n) > 600-10)
+        if X(n) < 600 && (strcmp(signal2_state, 'red') || strcmp(signal2_state, 'yellow'))
             stop_positions(end+1) = 600;
             stop_velocities(end+1) = 0;
         end
