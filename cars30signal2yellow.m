@@ -102,8 +102,16 @@ for t = 1:800  % Simulation time
 
     % Positions and velocities for all cars
     for n = 1 : numCars
+        if X(n) > 1000
+            V(n) = 0;
+            A(n) = 0;
+            continue;
+        end
         X(n) = X(n) + V(n) * dt + 0.5 * A(n) * dt^2;
         V(n) = V(n) + A(n) * dt;
+        V(n) = max(V(n), 0); % Prevent negative velocity
+        % Clamp acceleration to realistic range
+        A(n) = min(max(A(n), -8), 2);
     end
 
     delete(p);
@@ -120,12 +128,17 @@ ylabel('Position');
 hold on
 % Signal change (plot actual green transitions)
 for k = 1:length(GreenTimes1)
-    plot([GreenTimes1(k), GreenTimes1(k)], [0, 3000], '--g', 'LineWidth', 2);
+    plot([GreenTimes1(k), GreenTimes1(k)], [0, 1200], '--g', 'LineWidth', 1);
 end
 for k = 1:length(GreenTimes2)
-    plot([GreenTimes2(k), GreenTimes2(k)], [0, 3000], '--g', 'LineWidth', 2);
+    plot([GreenTimes2(k), GreenTimes2(k)], [0, 1200], '--g', 'LineWidth', 1);
 end
-legend('Cars', 'Signal 1 → Green', 'Signal 2 → Green', 'Location', 'southeast');
+% Add vertical lines for signal positions
+plot(xlim, [300, 300], ':k', 'LineWidth', 1);
+plot(xlim, [600, 600], ':k', 'LineWidth', 1);
+legend('Cars', 'Signal 1 → Green', 'Signal 2 → Green', 'Signal 1 Pos', 'Signal 2 Pos', 'Location', 'southeast');
+ylim([0 1200]);
+grid on;
 
 f3 = figure;
 plot(CarData(:, 1), CarData(:, numCars+2:2*numCars+1));  % Velocity data
