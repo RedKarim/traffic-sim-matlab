@@ -37,16 +37,30 @@ CarData = [];
 for t = 1 : 200  % Simulation time
     pause(0.03);
 
-    % Traffic signal logic for all cars
-    signal1_state = mod(floor(t/20), 2);  % 0 for red, 1 for green
-    signal2_state = mod(floor(t/20), 2);  % 0 for red, 1 for green
+    % Traffic signal logic for all cars with yellow light
+    cycle_length = 20; % total cycle duration in seconds
+    red_duration = 8;  % red duration in seconds
+    yellow_duration = 2; % yellow duration in seconds
+    green_duration = 10; % green duration in seconds
+
+    % Calculate signal states
+    time_in_cycle = mod(t*dt, cycle_length);
+    if time_in_cycle < red_duration
+        signal1_state = "red";
+    elseif time_in_cycle < red_duration + yellow_duration
+        signal1_state = "yellow";
+    else
+        signal1_state = "green";
+    end
+    % Both signals have the same timing for simplicity
+    signal2_state = signal1_state;
 
     for n = 1:numCars
-        % Check for first signal
-        if X(n) < 300 && signal1_state == 0
+        % Signal 1 logic
+        if X(n) < 300 && (strcmp(signal1_state, 'red') || strcmp(signal1_state, 'yellow')) && (X(n) > 300-10)
             A(n) = IDM(X(n), V(n), 300, 0);
-        % Check for second signal (after passing first signal)
-        elseif X(n) > 320 && X(n) < 600 && signal2_state == 0
+        % Signal 2 logic (after passing first signal)
+        elseif X(n) > 320 && X(n) < 600 && (strcmp(signal2_state, 'red') || strcmp(signal2_state, 'yellow')) && (X(n) > 600-10)
             A(n) = IDM(X(n), V(n), 600, 0);
         elseif n == 1
             % Lead car, no car in front
@@ -58,13 +72,17 @@ for t = 1 : 200  % Simulation time
     end
 
     % Set signal colors
-    if signal1_state == 0
+    if strcmp(signal1_state, 'red')
         set(p_signal1, 'MarkerFaceColor', 'r');
+    elseif strcmp(signal1_state, 'yellow')
+        set(p_signal1, 'MarkerFaceColor', 'y');
     else
         set(p_signal1, 'MarkerFaceColor', 'g');
     end
-    if signal2_state == 0
+    if strcmp(signal2_state, 'red')
         set(p_signal2, 'MarkerFaceColor', 'r');
+    elseif strcmp(signal2_state, 'yellow')
+        set(p_signal2, 'MarkerFaceColor', 'y');
     else
         set(p_signal2, 'MarkerFaceColor', 'g');
     end
