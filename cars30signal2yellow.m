@@ -34,6 +34,10 @@ p = plot(X, Y, 'sr', 'MarkerSize', 10, 'MarkerFaceColor', [0.5, 0.1, 1]);
 
 dt = 0.5;
 CarData = [];
+GreenTimes1 = [];
+GreenTimes2 = [];
+last_signal1_state = "";
+last_signal2_state = "";
 for t = 1 : 400  % Simulation time
     pause(0.06);
 
@@ -53,6 +57,16 @@ for t = 1 : 400  % Simulation time
         signal1_state = "red";
     end
     signal2_state = signal1_state; % Both signals have the same timing for simplicity
+
+    % Record green transitions for plotting
+    if ~strcmp(signal1_state, last_signal1_state) && strcmp(signal1_state, 'green')
+        GreenTimes1(end+1) = t*dt;
+    end
+    if ~strcmp(signal2_state, last_signal2_state) && strcmp(signal2_state, 'green')
+        GreenTimes2(end+1) = t*dt;
+    end
+    last_signal1_state = signal1_state;
+    last_signal2_state = signal2_state;
 
     % Car logic uses the same state variables
     for n = 1:numCars
@@ -94,9 +108,13 @@ title('Car Positions Over Time');
 xlabel('Time');
 ylabel('Position');
 hold on
-% Signal change
-plot([60*dt, 60*dt], [0, 700], '--g', 'LineWidth', 2);  % Signal 1 green
-plot([150*dt, 150*dt], [0, 700], '--g', 'LineWidth', 2);  % Signal 2 green
+% Signal change (plot actual green transitions)
+for k = 1:length(GreenTimes1)
+    plot([GreenTimes1(k), GreenTimes1(k)], [0, 3000], '--g', 'LineWidth', 2);
+end
+for k = 1:length(GreenTimes2)
+    plot([GreenTimes2(k), GreenTimes2(k)], [0, 3000], '--g', 'LineWidth', 2);
+end
 legend('Cars', 'Signal 1 → Green', 'Signal 2 → Green', 'Location', 'southeast');
 
 f3 = figure;
