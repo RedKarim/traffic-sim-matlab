@@ -37,28 +37,36 @@ CarData = [];
 for t = 1 : 200  % Simulation time
     pause(0.03);
 
-    % no signal part
-    A(1) = IDM(X(1), V(1), X(1)+1000, 20);
+    % Traffic signal logic for all cars
+    signal1_state = mod(floor(t/20), 2);  % 0 for red, 1 for green
+    signal2_state = mod(floor(t/20), 2);  % 0 for red, 1 for green
 
-    % First traffic signal x=300
-    if (t <= 60)
-        A(1) = IDM(X(1), V(1), 300, 0);
+    for n = 1:numCars
+        % Check for first signal
+        if X(n) < 300 && signal1_state == 0
+            A(n) = IDM(X(n), V(n), 300, 0);
+        % Check for second signal (after passing first signal)
+        elseif X(n) > 320 && X(n) < 600 && signal2_state == 0
+            A(n) = IDM(X(n), V(n), 600, 0);
+        elseif n == 1
+            % Lead car, no car in front
+            A(n) = IDM(X(n), V(n), X(n)+1000, 20);
+        else
+            % Follow the car in front
+            A(n) = IDM(X(n), V(n), X(n-1), V(n-1));
+        end
+    end
+
+    % Set signal colors
+    if signal1_state == 0
         set(p_signal1, 'MarkerFaceColor', 'r');
     else
         set(p_signal1, 'MarkerFaceColor', 'g');
     end
-
-    % Second traffic signal x=600
-    if (X(1) > 320 && t <= 150)
-        A(1) = IDM(X(1), V(1), 600, 0);  % Red until t=150
+    if signal2_state == 0
         set(p_signal2, 'MarkerFaceColor', 'r');
     else
-        set(p_signal2, 'MarkerFaceColor', 'g');  % Green after t=150
-    end
-
-    % Acceleration for all following cars
-    for n = 2 : numCars
-        A(n) = IDM(X(n), V(n), X(n - 1), V(n - 1));
+        set(p_signal2, 'MarkerFaceColor', 'g');
     end
 
     % Positions and velocities for all cars
