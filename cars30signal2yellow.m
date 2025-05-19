@@ -16,7 +16,7 @@ V(2:numCars) = 10;
 
 % Visualizations
 f = figure;
-set(f, 'position', [200,200,800,400]);
+set(f, 'position', [400,400,800,400]);
 axis([0 700  0 10])
 hold on
 Y = X * 0 + 5;
@@ -34,27 +34,27 @@ p = plot(X, Y, 'sr', 'MarkerSize', 10, 'MarkerFaceColor', [0.5, 0.1, 1]);
 
 dt = 0.5;
 CarData = [];
-for t = 1 : 200  % Simulation time
-    pause(0.03);
+for t = 1 : 400  % Simulation time
+    pause(0.06);
 
     % Traffic signal logic for all cars with yellow light
-    cycle_length = 20; % total cycle duration in seconds
-    red_duration = 8;  % red duration in seconds
-    yellow_duration = 2; % yellow duration in seconds
-    green_duration = 10; % green duration in seconds
+    cycle_length = 45; % total cycle duration in seconds
+    red_duration = 20;  % red duration in seconds
+    yellow_duration = 5; % yellow duration in seconds
+    green_duration = 20; % green duration in seconds
 
-    % Calculate signal states
+    % Calculate signal states ONCE
     time_in_cycle = mod(t*dt, cycle_length);
-    if time_in_cycle < red_duration
-        signal1_state = "red";
-    elseif time_in_cycle < red_duration + yellow_duration
+    if time_in_cycle < green_duration
+        signal1_state = "green";
+    elseif time_in_cycle < green_duration + yellow_duration
         signal1_state = "yellow";
     else
-        signal1_state = "green";
+        signal1_state = "red";
     end
-    % Both signals have the same timing for simplicity
-    signal2_state = signal1_state;
+    signal2_state = signal1_state; % Both signals have the same timing for simplicity
 
+    % Car logic uses the same state variables
     for n = 1:numCars
         % Signal 1 logic
         if X(n) < 300 && (strcmp(signal1_state, 'red') || strcmp(signal1_state, 'yellow')) && (X(n) > 300-10)
@@ -71,21 +71,10 @@ for t = 1 : 200  % Simulation time
         end
     end
 
-    % Set signal colors
-    if strcmp(signal1_state, 'red')
-        set(p_signal1, 'MarkerFaceColor', 'r');
-    elseif strcmp(signal1_state, 'yellow')
-        set(p_signal1, 'MarkerFaceColor', 'y');
-    else
-        set(p_signal1, 'MarkerFaceColor', 'g');
-    end
-    if strcmp(signal2_state, 'red')
-        set(p_signal2, 'MarkerFaceColor', 'r');
-    elseif strcmp(signal2_state, 'yellow')
-        set(p_signal2, 'MarkerFaceColor', 'y');
-    else
-        set(p_signal2, 'MarkerFaceColor', 'g');
-    end
+    % Set signal colors using a mapping for synchronization
+    state_to_color = struct('red', 'r', 'yellow', 'y', 'green', 'g');
+    set(p_signal1, 'MarkerFaceColor', state_to_color.(signal1_state));
+    set(p_signal2, 'MarkerFaceColor', state_to_color.(signal2_state));
 
     % Positions and velocities for all cars
     for n = 1 : numCars
