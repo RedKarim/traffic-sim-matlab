@@ -38,7 +38,7 @@ GreenTimes1 = [];
 GreenTimes2 = [];
 last_signal1_state = "";
 last_signal2_state = "";
-for t = 1 : 400  % Simulation time
+for t = 1:800  % Simulation time
     pause(0.06);
 
     % Traffic signal logic for all cars with yellow light
