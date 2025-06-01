@@ -231,58 +231,49 @@ xlabel('Car Index');
 ylabel('Total Fuel (mL)');
 grid on;
 
-% --- New Analysis: Car Flow, Average Velocity, Idling Time ---
+% --- Per-Minute Average Velocity and Idling Time Plots ---
+num_minutes = simulation_duration / 60;
+minute_edges = 0:60:simulation_duration;
+car_spawn_times = (0:car_spawn_interval:(simulation_duration-car_spawn_interval));
+car_spawn_minute = floor(car_spawn_times/60) + 1;
 
-% 1. Identify cars that exited the road (X > 1000 at any time)
-exited_cars = [];
-car_exit_times = [];
-for car = 1:maxCars
-    idx = find(PosData(:,car) > 700, 1, 'first');
-    if ~isempty(idx)
-        exited_cars(end+1) = car;
-        car_exit_times(end+1) = TimeVec(idx);
+% For each car, find its column in VelData/AccData
+num_actual_cars = size(VelData,2);
+car_indices = 1:num_actual_cars;
+car_spawn_times = car_spawn_times(1:num_actual_cars);
+car_spawn_minute = car_spawn_minute(1:num_actual_cars);
+
+avgVel_per_minute = NaN(1, num_minutes);
+idleTime_per_minute = NaN(1, num_minutes);
+for m = 1:num_minutes
+    cars_in_minute = car_indices(car_spawn_minute == m);
+    vel_vals = [];
+    idle_vals = [];
+    for c = cars_in_minute
+        v = VelData(:,c);
+        v = v(~isnan(v));
+        if isempty(v), continue; end
+        vel_vals(end+1) = mean(v);
+        idle_vals(end+1) = sum(v < 0.1) * dt;
+    end
+    if ~isempty(vel_vals)
+        avgVel_per_minute(m) = mean(vel_vals);
+        idleTime_per_minute(m) = mean(idle_vals);
     end
 end
 
-% Car flow q: number of cars exited per hour
-sim_hours = (TimeVec(end) - TimeVec(1)) / 3600;
-if sim_hours == 0
-    q = 0;
-else
-    q = length(exited_cars) / sim_hours;
-end
+q = 60 / car_spawn_interval;
 
-% 2. Average velocity for each exited car (exclude NaN and zero)
-avg_velocities = zeros(1, length(exited_cars));
-for i = 1:length(exited_cars)
-    car = exited_cars(i);
-    v = VelData(:,car);
-    v = v(~isnan(v));
-    avg_velocities(i) = mean(v);
-end
-avg_velocity = mean(avg_velocities);
-
-% 3. Idling time for each exited car (velocity < 0.1 considered stopped)
-idling_times = zeros(1, length(exited_cars));
-for i = 1:length(exited_cars)
-    car = exited_cars(i);
-    v = VelData(:,car);
-    v = v(~isnan(v));
-    idling_times(i) = sum(v < 0.1) * dt; % in seconds
-end
-avg_idling_time = mean(idling_times); % in seconds
-
-% 4. Plots
 f7 = figure;
-plot(q, avg_velocity, 'ob', 'MarkerSize', 10, 'MarkerFaceColor', 'b');
-title('Average Velocity vs Car Flow');
-xlabel('Car Flow q (cars/hour)');
+bar(1:num_minutes, avgVel_per_minute, 0.5);
+title(['Average Velocity per Minute (q = ' num2str(q) ' cars/min)']);
+xlabel('Minute Index');
 ylabel('Average Velocity (m/s)');
 grid on;
 
 f8 = figure;
-plot(q, avg_idling_time, 'or', 'MarkerSize', 10, 'MarkerFaceColor', 'r');
-title('Average Idling Time vs Car Flow');
-xlabel('Car Flow q (cars/hour)');
+bar(1:num_minutes, idleTime_per_minute, 0.5);
+title(['Average Idling Time per Minute (q = ' num2str(q) ' cars/min)']);
+xlabel('Minute Index');
 ylabel('Average Idling Time (s)');
 grid on;
