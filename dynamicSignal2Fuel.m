@@ -269,20 +269,20 @@ disp(['IdleTimePerMinute = ', num2str(IdleTimePerMinute)]);
 f7 = figure;
 bar(1:num_minutes, AvgVelPerMinute);
 title('Average Velocity vs Car Flow (per minute)');
-xlabel('Minute Interval');
+xlabel('q (min)');
 ylabel('Average Velocity (m/s)');
 grid on;
 xticks(1:num_minutes);
-xticklabels(q);
+xticklabels(1:num_minutes);
 
 f8 = figure;
 bar(1:num_minutes, IdleTimePerMinute);
 title('Average Idling Time vs Car Flow (per minute)');
-xlabel('Minute Interval');
+xlabel('q (min)');
 ylabel('Average Idling Time (s)');
 grid on;
 xticks(1:num_minutes);
-xticklabels(q);
+xticklabels(1:num_minutes);
 
 % Display how many cars entered the simulation
 fprintf('Number of cars that entered the simulation: %d\n', next_car_id - 1);
