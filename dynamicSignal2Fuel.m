@@ -231,46 +231,29 @@ xlabel('Car Index');
 ylabel('Total Fuel (mL)');
 grid on;
 
-% --- Per-Minute Average Velocity and Idling Time Plots ---
-num_minutes = simulation_duration / 60;
-
-% For each car, find its column in VelData/AccData
-num_actual_cars = size(VelData,2);
-car_indices = 1:num_actual_cars;
-car_spawn_times = car_spawn_times(1:num_actual_cars);
-car_spawn_minute = car_spawn_minute(1:num_actual_cars);
-
-avgVel_per_minute = NaN(1, num_minutes);
-idleTime_per_minute = NaN(1, num_minutes);
-for m = 1:num_minutes
-    cars_in_minute = car_indices(car_spawn_minute == m);
-    vel_vals = [];
-    idle_vals = [];
-    for c = cars_in_minute
-        v = VelData(:,c);
-        v = v(~isnan(v));
-        if isempty(v), continue; end
-        vel_vals(end+1) = mean(v);
-        idle_vals(end+1) = sum(v < 0.1) * dt;
-    end
-    if ~isempty(vel_vals)
-        avgVel_per_minute(m) = mean(vel_vals);
-        idleTime_per_minute(m) = mean(idle_vals);
-    end
+% --- Average Velocity and Idling Time Plots ---
+% Calculate average velocity per car (ignoring NaNs)
+AvgVelPerCar = zeros(1, maxCars);
+IdleTimePerCar = zeros(1, maxCars);
+for car = 1:maxCars
+    v = VelData(:, car);
+    AvgVelPerCar(car) = sum(v(~isnan(v))) / sum(~isnan(v));
+    % Idling: count time steps where velocity is (almost) zero
+    IdleTimePerCar(car) = sum(v < 0.1 & ~isnan(v)) * dt;
 end
 
-q = 60 / car_spawn_interval;
+q = 1:maxCars;
 
 f7 = figure;
-bar(1:num_minutes, avgVel_per_minute, 0.5);
-title(['Average Velocity per Minute (q = ' num2str(q) ' cars/min)']);
-xlabel('Minute Index');
+bar(q, AvgVelPerCar);
+title('Average Velocity Per Car');
+xlabel('q (Car Index)');
 ylabel('Average Velocity (m/s)');
 grid on;
 
 f8 = figure;
-bar(1:num_minutes, idleTime_per_minute, 0.5);
-title(['Average Idling Time per Minute (q = ' num2str(q) ' cars/min)']);
-xlabel('Minute Index');
-ylabel('Average Idling Time (s)');
+bar(q, IdleTimePerCar);
+title('Idling Time Per Car');
+xlabel('q (Car Index)');
+ylabel('Idling Time (s)');
 grid on;
