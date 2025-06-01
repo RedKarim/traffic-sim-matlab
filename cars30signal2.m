@@ -95,3 +95,4 @@ plot(CarData(:, 1), CarData(:, 2*numCars+2:end));  % Acceleration data
 title('Car Accelerations Over Time');
 xlabel('Time');
 ylabel('Acceleration');
+
