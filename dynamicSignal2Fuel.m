@@ -1,26 +1,21 @@
 close all
-numCars = 30;  % Number of cars 30
 
+% Simulation timing parameters
+simulation_duration = 600;  % Total simulation time in seconds
+car_spawn_interval = 10;    % Time between car spawns in seconds
+dt = 0.5;                  % Time step for simulation
 
-X = zeros(numCars, 1);
-V = zeros(numCars, 1);
-A = zeros(numCars, 1);
-
-% Positions with 10m between cars
-for i = 1:numCars
-    X(i) = 100 - (i-1) * 10;
-end
-
-% Initial velocities
-V(1) = 8;
-V(2:numCars) = 10;
+% Initialize car tracking
+cars = struct('X', {}, 'V', {}, 'A', {}, 'active', {});
+next_car_id = 1;
+max_cars = 100;  % Maximum number of cars to prevent memory issues
 
 % Visualizations
 f = figure;
 set(f, 'position', [400,400,800,400]);
 axis([0 700  0 10])
 hold on
-Y = X * 0 + 5;
+Y = zeros(max_cars, 1) + 5;  % Initialize Y positions for all possible cars
 
 % Road
 p_road = plot([0 1000], [4.5 4.5], 'LineWidth', 30, 'color', [0.5, 0.5, 0.5]);
@@ -31,25 +26,37 @@ p_signal2 = plot(600, 8, 'sr', 'MarkerSize', 15, 'MarkerFaceColor', 'r');  % Red
 text(300, 9, 'Signal 1', 'HorizontalAlignment', 'center');
 text(600, 9, 'Signal 2', 'HorizontalAlignment', 'center');
 
-p = plot(X, Y, 'sr', 'MarkerSize', 10, 'MarkerFaceColor', [0.5, 0.1, 1]);
+% Initialize plot for cars
+p = plot(zeros(max_cars, 1), Y, 'sr', 'MarkerSize', 10, 'MarkerFaceColor', [0.5, 0.1, 1]);
 
-dt = 0.5;
 CarData = [];
 GreenTimes1 = [];
 GreenTimes2 = [];
 last_signal1_state = "";
 last_signal2_state = "";
-for t = 1:600  % Simulation time
+
+% Convert simulation time to steps
+total_steps = ceil(simulation_duration / dt);
+
+for t = 1:total_steps
+    current_time = t * dt;
     pause(0.01);
 
-    % Traffic signal logic for all cars with yellow light
+    % Spawn new car if it's time
+    if mod(current_time, car_spawn_interval) < dt && length(cars) < max_cars
+        new_car = struct('X', 100, 'V', 10, 'A', 0, 'active', true);
+        cars(next_car_id) = new_car;
+        next_car_id = next_car_id + 1;
+    end
+
+    % Traffic signal logic
     cycle_length = 45; % total cycle duration in seconds
     red_duration = 20;  % red duration in seconds
     yellow_duration = 5; % yellow duration in seconds
     green_duration = 20; % green duration in seconds
 
     % Calculate signal states ONCE
-    time_in_cycle = mod(t*dt, cycle_length);
+    time_in_cycle = mod(current_time, cycle_length);
     if time_in_cycle < green_duration
         signal1_state = "green";
     elseif time_in_cycle < green_duration + yellow_duration
@@ -57,72 +64,81 @@ for t = 1:600  % Simulation time
     else
         signal1_state = "red";
     end
-    signal2_state = signal1_state; % Both signals have the same timing for simplicity
+    signal2_state = signal1_state;
 
     % Record green transitions for plotting
     if ~strcmp(signal1_state, last_signal1_state) && strcmp(signal1_state, 'green')
-        GreenTimes1(end+1) = t*dt;
+        GreenTimes1(end+1) = current_time;
     end
     if ~strcmp(signal2_state, last_signal2_state) && strcmp(signal2_state, 'green')
-        GreenTimes2(end+1) = t*dt;
+        GreenTimes2(end+1) = current_time;
     end
     last_signal1_state = signal1_state;
     last_signal2_state = signal2_state;
 
-    % Car logic uses the same state variables
-    for n = 1:numCars
+    % Car logic
+    active_cars = find([cars.active]);
+    for n = active_cars
         stop_positions = [];
         stop_velocities = [];
         % Check signal 1
-        if X(n) < 300 && (strcmp(signal1_state, 'red') || strcmp(signal1_state, 'yellow'))
+        if cars(n).X < 300 && (strcmp(signal1_state, 'red') || strcmp(signal1_state, 'yellow'))
             stop_positions(end+1) = 300;
             stop_velocities(end+1) = 0;
         end
         % Check signal 2
-        if X(n) < 600 && (strcmp(signal2_state, 'red') || strcmp(signal2_state, 'yellow'))
+        if cars(n).X < 600 && (strcmp(signal2_state, 'red') || strcmp(signal2_state, 'yellow'))
             stop_positions(end+1) = 600;
             stop_velocities(end+1) = 0;
         end
+
         if ~isempty(stop_positions)
             % Stop for the nearest signal ahead
             [min_pos, idx] = min(stop_positions);
-            A(n) = IDM(X(n), V(n), min_pos, stop_velocities(idx));
-        elseif n == 1
+            cars(n).A = IDM(cars(n).X, cars(n).V, min_pos, stop_velocities(idx));
+        elseif n == active_cars(1)
             % Lead car, no car in front
-            A(n) = IDM(X(n), V(n), X(n)+1000, 20);
+            cars(n).A = IDM(cars(n).X, cars(n).V, cars(n).X+1000, 20);
         else
             % Follow the car in front
-            A(n) = IDM(X(n), V(n), X(n-1), V(n-1));
+            prev_car_idx = active_cars(find(active_cars == n) - 1);
+            cars(n).A = IDM(cars(n).X, cars(n).V, cars(prev_car_idx).X, cars(prev_car_idx).V);
         end
     end
 
-    % Set signal colors using a mapping for synchronization
+    % Set signal colors
     state_to_color = struct('red', 'r', 'yellow', 'y', 'green', 'g');
     set(p_signal1, 'MarkerFaceColor', state_to_color.(signal1_state));
     set(p_signal2, 'MarkerFaceColor', state_to_color.(signal2_state));
 
-    % Positions and velocities for all cars
-    for n = 1 : numCars
-        if X(n) > 1000
-            V(n) = 0;
-            A(n) = 0;
+    % Update positions and velocities
+    X = zeros(max_cars, 1);
+    V = zeros(max_cars, 1);
+    A = zeros(max_cars, 1);
+    
+    for n = active_cars
+        if cars(n).X > 1000
+            cars(n).active = false;
             continue;
         end
-        X(n) = X(n) + V(n) * dt + 0.5 * A(n) * dt^2;
-        V(n) = V(n) + A(n) * dt;
-        V(n) = max(V(n), 0); % Prevent negative velocity
-        % Clamp acceleration to realistic range
-        A(n) = min(max(A(n), -8), 2);
+        cars(n).X = cars(n).X + cars(n).V * dt + 0.5 * cars(n).A * dt^2;
+        cars(n).V = cars(n).V + cars(n).A * dt;
+        cars(n).V = max(cars(n).V, 0);
+        cars(n).A = min(max(cars(n).A, -8), 2);
+        
+        X(n) = cars(n).X;
+        V(n) = cars(n).V;
+        A(n) = cars(n).A;
     end
 
     delete(p);
-    CarData(end+1,:) = [t * dt, X', V', A'];
+    CarData(end+1,:) = [current_time, X', V', A'];
     p = plot(X, Y, 'sr', 'MarkerSize', 10, 'MarkerFaceColor', [0.5, 0.1, 1]);
 end
 
 %% graph
 f2 = figure;
-plot(CarData(:, 1), CarData(:, 2:numCars+1));  % Position data
+plot(CarData(:, 1), CarData(:, 2:max_cars+1));  % Position data
 title('Car Positions Over Time');
 xlabel('Time');
 ylabel('Position');
@@ -142,13 +158,13 @@ ylim([0 1200]);
 grid on;
 
 f3 = figure;
-plot(CarData(:, 1), CarData(:, numCars+2:2*numCars+1));  % Velocity data
+plot(CarData(:, 1), CarData(:, max_cars+2:2*max_cars+1));  % Velocity data
 title('Car Velocities Over Time');
 xlabel('Time');
 ylabel('Velocity');
 
 f4 = figure;
-plot(CarData(:, 1), CarData(:, 2*numCars+2:end));  % Acceleration data
+plot(CarData(:, 1), CarData(:, 2*max_cars+2:end));  % Acceleration data
 title('Car Accelerations Over Time');
 xlabel('Time');
 ylabel('Acceleration');
@@ -157,8 +173,8 @@ ylabel('Acceleration');
 %%Fuel consumption
 % Extract velocity and acceleration from CarData
 timeVec = CarData(:, 1);
-velData = CarData(:, numCars+2:2*numCars+1);
-accData = CarData(:, 2*numCars+2:end);
+velData = CarData(:, max_cars+2:2*max_cars+1);
+accData = CarData(:, 2*max_cars+2:end);
 
 % Preallocate fuel consumption matrix
 FuelData = zeros(size(velData));  % mL/s per car per time step
@@ -169,7 +185,7 @@ c0 = 0.07224; c1 = 9.681e-2; c2 = 1.075e-3;
 
 % Calculate fuel for each car at each timestep
 for t = 1:length(timeVec)
-    for car = 1:numCars
+    for car = 1:max_cars
         v = velData(t, car);
         a = accData(t, car);
         u_bar = max(a, 0);  % only count positive acceleration
@@ -185,7 +201,7 @@ plot(timeVec, FuelData);
 title('Fuel Consumption Over Time');
 xlabel('Time (s)');
 ylabel('Fuel Consumption (mL/s)');
-legend(arrayfun(@(n) sprintf('Car %d', n), 1:numCars, 'UniformOutput', false));
+legend(arrayfun(@(n) sprintf('Car %d', n), 1:max_cars, 'UniformOutput', false));
 grid on;
 
 TotalFuelPerCar = sum(FuelData, 1) * dt;
