@@ -43,6 +43,10 @@ total_steps = ceil(simulation_duration / dt);
 % Prepare car history for unique car tracking
 CarHistory = struct();
 
+% Fuel consumption constants
+b0 = 0.156;  b1 = 2.450e-2;  b2 = -7.415e-4;  b3 = 5.975e-5;
+c0 = 0.07224; c1 = 9.681e-2; c2 = 1.075e-3;
+
 for t = 1:total_steps
     current_time = t * dt;
     pause(0.01);
@@ -274,6 +278,7 @@ ylabel('Average Velocity (m/s)');
 grid on;
 xticks(1:num_minutes);
 xticklabels(1:num_minutes);
+xlim([0.5, num_minutes + 0.5]);
 
 f8 = figure;
 plot(1:num_minutes, IdleTimePerMinute);
@@ -283,6 +288,7 @@ ylabel('Average Idling Time (s)');
 grid on;
 xticks(1:num_minutes);
 xticklabels(1:num_minutes);
+xlim([0.5, num_minutes + 0.5]);
 
 % Display how many cars entered the simulation
 fprintf('Number of cars that entered the simulation: %d\n', next_car_id - 1);
