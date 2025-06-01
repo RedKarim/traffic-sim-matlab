@@ -267,7 +267,7 @@ disp(['AvgVelPerMinute = ', num2str(AvgVelPerMinute)]);
 disp(['IdleTimePerMinute = ', num2str(IdleTimePerMinute)]);
 
 f7 = figure;
-bar(1:num_minutes, AvgVelPerMinute);
+plot(1:num_minutes, AvgVelPerMinute);
 title('Average Velocity vs Car Flow (per minute)');
 xlabel('q (min)');
 ylabel('Average Velocity (m/s)');
@@ -276,7 +276,7 @@ xticks(1:num_minutes);
 xticklabels(1:num_minutes);
 
 f8 = figure;
-bar(1:num_minutes, IdleTimePerMinute);
+plot(1:num_minutes, IdleTimePerMinute);
 title('Average Idling Time vs Car Flow (per minute)');
 xlabel('q (min)');
 ylabel('Average Idling Time (s)');
