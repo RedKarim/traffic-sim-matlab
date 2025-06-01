@@ -31,7 +31,7 @@ text(600, 9, 'Signal 2', 'HorizontalAlignment', 'center');
 % Initialize plot for cars
 p = plot(zeros(max_cars, 1), Y, 'sr', 'MarkerSize', 10, 'MarkerFaceColor', [0.5, 0.1, 1]);
 
-CarData = [];
+CarData = {};
 GreenTimes1 = [];
 GreenTimes2 = [];
 last_signal1_state = "";
@@ -114,10 +114,9 @@ for t = 1:total_steps
     set(p_signal2, 'MarkerFaceColor', state_to_color.(signal2_state));
 
     % Update positions and velocities
-    X = zeros(max_cars, 1);
-    V = zeros(max_cars, 1);
-    A = zeros(max_cars, 1);
-    
+    X_plot = [];
+    V_plot = [];
+    A_plot = [];
     for n = active_cars
         if cars(n).X > 1000
             cars(n).active = false;
@@ -127,23 +126,39 @@ for t = 1:total_steps
         cars(n).V = cars(n).V + cars(n).A * dt;
         cars(n).V = max(cars(n).V, 0);
         cars(n).A = min(max(cars(n).A, -8), 2);
-        
-        X(n) = cars(n).X;
-        V(n) = cars(n).V;
-        A(n) = cars(n).A;
+        if cars(n).X >= 0 && cars(n).X <= 1000 && cars(n).active
+            X_plot(end+1) = cars(n).X;
+            V_plot(end+1) = cars(n).V;
+            A_plot(end+1) = cars(n).A;
+        end
     end
-
     delete(p);
-    CarData(end+1,:) = [current_time, X', V', A'];
-    p = plot(X, Y, 'sr', 'MarkerSize', 10, 'MarkerFaceColor', [0.5, 0.1, 1]);
+    CarData{end+1} = [current_time, X_plot, V_plot, A_plot];
+    p = plot(X_plot, ones(size(X_plot))*5, 'sr', 'MarkerSize', 10, 'MarkerFaceColor', [0.5, 0.1, 1]);
 end
 
-%% graph
+%% Align variable-length CarData into matrices for plotting
+numSteps = length(CarData);
+maxCars = max(cellfun(@(c) size(c,2), CarData)) - 1;
+PosData = NaN(numSteps, maxCars);
+VelData = NaN(numSteps, maxCars);
+AccData = NaN(numSteps, maxCars);
+TimeVec = zeros(numSteps,1);
+for i = 1:numSteps
+    entry = CarData{i};
+    TimeVec(i) = entry(1);
+    nCars = (size(entry,2)-1)/3;
+    if nCars > 0
+        PosData(i,1:nCars) = entry(2:1+nCars);
+        VelData(i,1:nCars) = entry(2+nCars:1+2*nCars);
+        AccData(i,1:nCars) = entry(2+2*nCars:end);
+    end
+end
+
 f2 = figure;
-plot(CarData(:, 1), CarData(:, 2:max_cars+1));  % Position data
+plot(TimeVec, PosData);
 title('Car Positions Over Time');
-xlabel('Time');
-ylabel('Position');
+xlabel('Time'); ylabel('Position');
 hold on
 % Signal change (plot actual green transitions)
 for k = 1:length(GreenTimes1)
@@ -160,23 +175,20 @@ ylim([0 1200]);
 grid on;
 
 f3 = figure;
-plot(CarData(:, 1), CarData(:, max_cars+2:2*max_cars+1));  % Velocity data
+plot(TimeVec, VelData);
 title('Car Velocities Over Time');
-xlabel('Time');
-ylabel('Velocity');
+xlabel('Time'); ylabel('Velocity');
 
 f4 = figure;
-plot(CarData(:, 1), CarData(:, 2*max_cars+2:end));  % Acceleration data
+plot(TimeVec, AccData);
 title('Car Accelerations Over Time');
-xlabel('Time');
-ylabel('Acceleration');
-
+xlabel('Time'); ylabel('Acceleration');
 
 %%Fuel consumption
 % Extract velocity and acceleration from CarData
-timeVec = CarData(:, 1);
-velData = CarData(:, max_cars+2:2*max_cars+1);
-accData = CarData(:, 2*max_cars+2:end);
+timeVec = TimeVec;
+velData = VelData;
+accData = AccData;
 
 % Preallocate fuel consumption matrix
 FuelData = zeros(size(velData));  % mL/s per car per time step
