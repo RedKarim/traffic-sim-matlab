@@ -2,7 +2,7 @@ close all
 
 % Simulation timing parameters
 simulation_duration = 600;  % Total simulation time in seconds
-car_spawn_interval = 10;    % Time between car spawns in seconds
+car_spawn_interval = 3;    % Time between car spawns in seconds
 dt = 0.5;                  % Time step for simulation
 
 % Calculate maximum number of cars based on simulation parameters
@@ -191,7 +191,6 @@ end
 % Add vertical lines for signal positions
 plot(xlim, [300, 300], ':k', 'LineWidth', 1);
 plot(xlim, [600, 600], ':k', 'LineWidth', 1);
-legend('Cars', 'Signal 1 → Green', 'Signal 2 → Green', 'Signal 1 Pos', 'Signal 2 Pos', 'Location', 'southeast');
 ylim([0 1200]);
 grid on;
 
@@ -222,7 +221,6 @@ hold off;
 title('Fuel Consumption Over Time (by Car ID)');
 xlabel('Time (s)');
 ylabel('Fuel Consumption (mL/s)');
-legend(arrayfun(@(i) sprintf('Car %d', i), 1:num_cars, 'UniformOutput', false));
 grid on;
 
 f6 = figure;
