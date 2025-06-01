@@ -230,3 +230,59 @@ title('Total Fuel Consumed Per Car');
 xlabel('Car Index');
 ylabel('Total Fuel (mL)');
 grid on;
+
+% --- New Analysis: Car Flow, Average Velocity, Idling Time ---
+
+% 1. Identify cars that exited the road (X > 1000 at any time)
+exited_cars = [];
+car_exit_times = [];
+for car = 1:maxCars
+    idx = find(PosData(:,car) > 700, 1, 'first');
+    if ~isempty(idx)
+        exited_cars(end+1) = car;
+        car_exit_times(end+1) = TimeVec(idx);
+    end
+end
+
+% Car flow q: number of cars exited per hour
+sim_hours = (TimeVec(end) - TimeVec(1)) / 3600;
+if sim_hours == 0
+    q = 0;
+else
+    q = length(exited_cars) / sim_hours;
+end
+
+% 2. Average velocity for each exited car (exclude NaN and zero)
+avg_velocities = zeros(1, length(exited_cars));
+for i = 1:length(exited_cars)
+    car = exited_cars(i);
+    v = VelData(:,car);
+    v = v(~isnan(v));
+    avg_velocities(i) = mean(v);
+end
+avg_velocity = mean(avg_velocities);
+
+% 3. Idling time for each exited car (velocity < 0.1 considered stopped)
+idling_times = zeros(1, length(exited_cars));
+for i = 1:length(exited_cars)
+    car = exited_cars(i);
+    v = VelData(:,car);
+    v = v(~isnan(v));
+    idling_times(i) = sum(v < 0.1) * dt; % in seconds
+end
+avg_idling_time = mean(idling_times); % in seconds
+
+% 4. Plots
+f7 = figure;
+plot(q, avg_velocity, 'ob', 'MarkerSize', 10, 'MarkerFaceColor', 'b');
+title('Average Velocity vs Car Flow');
+xlabel('Car Flow q (cars/hour)');
+ylabel('Average Velocity (m/s)');
+grid on;
+
+f8 = figure;
+plot(q, avg_idling_time, 'or', 'MarkerSize', 10, 'MarkerFaceColor', 'r');
+title('Average Idling Time vs Car Flow');
+xlabel('Car Flow q (cars/hour)');
+ylabel('Average Idling Time (s)');
+grid on;
