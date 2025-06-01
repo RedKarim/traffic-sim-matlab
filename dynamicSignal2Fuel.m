@@ -233,9 +233,6 @@ grid on;
 
 % --- Per-Minute Average Velocity and Idling Time Plots ---
 num_minutes = simulation_duration / 60;
-minute_edges = 0:60:simulation_duration;
-car_spawn_times = (0:car_spawn_interval:(simulation_duration-car_spawn_interval));
-car_spawn_minute = floor(car_spawn_times/60) + 1;
 
 % For each car, find its column in VelData/AccData
 num_actual_cars = size(VelData,2);
