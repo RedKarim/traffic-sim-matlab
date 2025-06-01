@@ -38,8 +38,8 @@ GreenTimes1 = [];
 GreenTimes2 = [];
 last_signal1_state = "";
 last_signal2_state = "";
-for t = 1:800  % Simulation time
-    pause(0.06);
+for t = 1:600  % Simulation time
+    pause(0.006);
 
     % Traffic signal logic for all cars with yellow light
     cycle_length = 45; % total cycle duration in seconds
@@ -151,3 +151,4 @@ plot(CarData(:, 1), CarData(:, 2*numCars+2:end));  % Acceleration data
 title('Car Accelerations Over Time');
 xlabel('Time');
 ylabel('Acceleration');
+
