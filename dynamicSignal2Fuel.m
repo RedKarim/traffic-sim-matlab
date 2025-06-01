@@ -1,7 +1,7 @@
 close all
 
 % Simulation timing parameters
-simulation_duration = 360;  % Total simulation time in seconds
+simulation_duration = 600;  % Total simulation time in seconds
 car_spawn_interval = 5;    % Time between car spawns in seconds
 dt = 0.5;                  % Time step for simulation
 
@@ -46,7 +46,7 @@ for t = 1:total_steps
 
     % Spawn new car if it's time
     if mod(current_time, car_spawn_interval) < dt && length(cars) < max_cars
-        new_car = struct('X', 100, 'V', 10, 'A', 0, 'active', true);
+        new_car = struct('X', 0, 'V', 0, 'A', 0, 'active', true);
         cars(next_car_id) = new_car;
         next_car_id = next_car_id + 1;
     end
