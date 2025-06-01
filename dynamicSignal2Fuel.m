@@ -9,7 +9,7 @@ dt = 0.5;                  % Time step for simulation
 max_cars = ceil(simulation_duration / car_spawn_interval);  % Maximum number of cars that can spawn in the simulation
 
 % Initialize car tracking
-cars = struct('X', {}, 'V', {}, 'A', {}, 'active', {});
+cars = struct('X', {}, 'V', {}, 'A', {}, 'active', {}, 'id', {});
 next_car_id = 1;
 
 % Visualizations
@@ -40,13 +40,16 @@ last_signal2_state = "";
 % Convert simulation time to steps
 total_steps = ceil(simulation_duration / dt);
 
+% Prepare car history for unique car tracking
+CarHistory = struct();
+
 for t = 1:total_steps
     current_time = t * dt;
     pause(0.01);
 
     % Spawn new car if it's time
     if mod(current_time, car_spawn_interval) < dt && length(cars) < max_cars
-        new_car = struct('X', 0, 'V', 10, 'A', 0, 'active', true);
+        new_car = struct('X', 0, 'V', 10, 'A', 0, 'active', true, 'id', next_car_id);
         cars(next_car_id) = new_car;
         next_car_id = next_car_id + 1;
     end
@@ -106,6 +109,20 @@ for t = 1:total_steps
             prev_car_idx = active_cars(find(active_cars == n) - 1);
             cars(n).A = IDM(cars(n).X, cars(n).V, cars(prev_car_idx).X, cars(prev_car_idx).V);
         end
+        % Track car history by unique id
+        car_id = cars(n).id;
+        if ~isfield(CarHistory, sprintf('car%d', car_id))
+            CarHistory.(sprintf('car%d', car_id)) = struct('time', [], 'v', [], 'a', [], 'fuel', []);
+        end
+        % Calculate fuel for this car at this time
+        v = cars(n).V;
+        a = cars(n).A;
+        u_bar = max(a, 0);
+        fc = b0 + b1*v + b2*v^2 + b3*v^3 + u_bar * (c0 + c1*v + c2*v^2);
+        CarHistory.(sprintf('car%d', car_id)).time(end+1) = current_time;
+        CarHistory.(sprintf('car%d', car_id)).v(end+1) = v;
+        CarHistory.(sprintf('car%d', car_id)).a(end+1) = a;
+        CarHistory.(sprintf('car%d', car_id)).fuel(end+1) = fc;
     end
 
     % Set signal colors
@@ -184,50 +201,30 @@ plot(TimeVec, AccData);
 title('Car Accelerations Over Time');
 xlabel('Time'); ylabel('Acceleration');
 
-%%Fuel consumption
-% Extract velocity and acceleration from CarData
-timeVec = TimeVec;
-velData = VelData;
-accData = AccData;
-
-% Preallocate fuel consumption matrix
-FuelData = zeros(size(velData));  % mL/s per car per time step
-
-% Constants
-b0 = 0.156;  b1 = 2.450e-2;  b2 = -7.415e-4;  b3 = 5.975e-5;
-c0 = 0.07224; c1 = 9.681e-2; c2 = 1.075e-3;
-
-% Calculate fuel for each car at each timestep
-for t = 1:length(timeVec)
-    for car = 1:max_cars
-        v = velData(t, car);
-        a = accData(t, car);
-        if isnan(v) || isnan(a)
-            continue; % skip if car does not exist at this time
-        end
-        u_bar = max(a, 0);  % only count positive acceleration
-
-        fc = b0 + b1*v + b2*v^2 + b3*v^3 + ...
-             u_bar * (c0 + c1*v + c2*v^2);
-        FuelData(t, car) = fc;
-    end
+%% Fuel consumption summary by unique car id
+car_ids = fieldnames(CarHistory);
+num_cars = length(car_ids);
+TotalFuelPerCar = zeros(1, num_cars);
+for i = 1:num_cars
+    car_hist = CarHistory.(car_ids{i});
+    TotalFuelPerCar(i) = sum(car_hist.fuel) * dt;
 end
-FuelData(isnan(FuelData)) = 0;
-
 f5 = figure;
-plot(timeVec, FuelData(:,1:max_cars));
-title('Fuel Consumption Over Time');
+hold on;
+for i = 1:num_cars
+    plot(CarHistory.(car_ids{i}).time, CarHistory.(car_ids{i}).fuel);
+end
+hold off;
+title('Fuel Consumption Over Time (by Car ID)');
 xlabel('Time (s)');
 ylabel('Fuel Consumption (mL/s)');
-legend(arrayfun(@(n) sprintf('Car %d', n), 1:max_cars, 'UniformOutput', false));
+legend(arrayfun(@(i) sprintf('Car %d', i), 1:num_cars, 'UniformOutput', false));
 grid on;
 
-TotalFuelPerCar = sum(FuelData, 1) * dt;
-validCars = TotalFuelPerCar > 0;
 f6 = figure;
-bar(find(validCars), TotalFuelPerCar(validCars));
-title('Total Fuel Consumed Per Car');
-xlabel('Car Index');
+bar(1:num_cars, TotalFuelPerCar);
+title('Total Fuel Consumed Per Car (by Car ID)');
+xlabel('Car ID');
 ylabel('Total Fuel (mL)');
 grid on;
 
@@ -261,4 +258,4 @@ grid on;
 % Display how many cars entered the simulation
 fprintf('Number of cars that entered the simulation: %d\n', next_car_id - 1);
 disp('Cars with nonzero total fuel:');
-disp(find(validCars));
+disp(find(TotalFuelPerCar > 0));
