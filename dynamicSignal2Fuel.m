@@ -199,9 +199,12 @@ c0 = 0.07224; c1 = 9.681e-2; c2 = 1.075e-3;
 
 % Calculate fuel for each car at each timestep
 for t = 1:length(timeVec)
-    for car = 1:max_cars
+    for car = 1:maxCars
         v = velData(t, car);
         a = accData(t, car);
+        if isnan(v) || isnan(a)
+            continue; % skip if car does not exist at this time
+        end
         u_bar = max(a, 0);  % only count positive acceleration
 
         fc = b0 + b1*v + b2*v^2 + b3*v^3 + ...
@@ -218,7 +221,7 @@ ylabel('Fuel Consumption (mL/s)');
 legend(arrayfun(@(n) sprintf('Car %d', n), 1:max_cars, 'UniformOutput', false));
 grid on;
 
-TotalFuelPerCar = sum(FuelData, 1) * dt;
+TotalFuelPerCar = sum(FuelData, 1, 'omitnan') * dt;
 f6 = figure;
 bar(TotalFuelPerCar);
 title('Total Fuel Consumed Per Car');
