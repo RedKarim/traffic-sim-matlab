@@ -226,12 +226,12 @@ legend(arrayfun(@(i) sprintf('Car %d', i), 1:num_cars, 'UniformOutput', false));
 grid on;
 
 f6 = figure;
-bar(1:num_cars, TotalFuelPerCar);
+plot(1:num_cars, TotalFuelPerCar);
 title('Total Fuel Consumed Per Car (by Car ID)');
 xlabel('Car ID');
 ylabel('Total Fuel (mL)');
 grid on;
-xlim([0 num_cars+1]);
+xlim([0.5, num_cars + 0.5]);
 
 % --- Aggregate by car flow (q = number of cars per minute) ---
 car_entry_times = zeros(1, num_cars);
@@ -242,7 +242,7 @@ max_time = max(car_entry_times);
 minute_edges = 0:60:(ceil(max_time/60)*60);
 [~, bin] = histc(car_entry_times, minute_edges);
 num_minutes = length(minute_edges)-1;
-q = zeros(1, num_minutes); % car flow per minute
+q = zeros(1, num_minutes);
 AvgVelPerMinute = zeros(1, num_minutes);
 IdleTimePerMinute = zeros(1, num_minutes);
 for m = 1:num_minutes
