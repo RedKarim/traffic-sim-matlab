@@ -212,18 +212,20 @@ for t = 1:length(timeVec)
         FuelData(t, car) = fc;
     end
 end
+FuelData(isnan(FuelData)) = 0;
 
 f5 = figure;
-plot(timeVec, FuelData);
+plot(timeVec, FuelData(:,1:maxCars));
 title('Fuel Consumption Over Time');
 xlabel('Time (s)');
 ylabel('Fuel Consumption (mL/s)');
-legend(arrayfun(@(n) sprintf('Car %d', n), 1:max_cars, 'UniformOutput', false));
+legend(arrayfun(@(n) sprintf('Car %d', n), 1:maxCars, 'UniformOutput', false));
 grid on;
 
-TotalFuelPerCar = sum(FuelData, 1, 'omitnan') * dt;
+TotalFuelPerCar = sum(FuelData, 1) * dt;
+validCars = TotalFuelPerCar > 0;
 f6 = figure;
-bar(TotalFuelPerCar);
+bar(find(validCars), TotalFuelPerCar(validCars));
 title('Total Fuel Consumed Per Car');
 xlabel('Car Index');
 ylabel('Total Fuel (mL)');
