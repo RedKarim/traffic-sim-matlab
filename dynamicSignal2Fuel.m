@@ -1,8 +1,8 @@
 close all
 
 % Simulation timing parameters
-simulation_duration = 600;  % Total simulation time in seconds
-car_spawn_interval = 3;    % Time between car spawns in seconds
+simulation_duration = 360;  % Total simulation time in seconds
+car_spawn_interval = 5;    % Time between car spawns in seconds
 dt = 0.5;                  % Time step for simulation
 
 % Calculate maximum number of cars based on simulation parameters
