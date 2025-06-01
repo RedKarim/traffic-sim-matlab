@@ -2,13 +2,13 @@ close all
 
 % Simulation timing parameters
 simulation_duration = 600;  % Total simulation time in seconds
-car_spawn_interval = 10;    % Time between car spawns in seconds
+car_spawn_interval = 3;    % Time between car spawns in seconds
 dt = 0.5;                  % Time step for simulation
 
 % Initialize car tracking
 cars = struct('X', {}, 'V', {}, 'A', {}, 'active', {});
 next_car_id = 1;
-max_cars = 100;  % Maximum number of cars to prevent memory issues
+max_cars = 130;  % Maximum number of cars to prevent memory issues
 
 % Visualizations
 f = figure;
