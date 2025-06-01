@@ -228,30 +228,26 @@ xlabel('Car ID');
 ylabel('Total Fuel (mL)');
 grid on;
 
-% --- Average Velocity and Idling Time Plots ---
-% Calculate average velocity per car (ignoring NaNs)
-AvgVelPerCar = zeros(1, max_cars);
-IdleTimePerCar = zeros(1, max_cars);
-for car = 1:max_cars
-    v = VelData(:, car);
-    AvgVelPerCar(car) = sum(v(~isnan(v))) / sum(~isnan(v));
-    % Idling: count time steps where velocity is (almost) zero
-    IdleTimePerCar(car) = sum(v < 0.1 & ~isnan(v)) * dt;
+% --- Average Velocity and Idling Time Plots by Car ID ---
+AvgVelPerCar = zeros(1, num_cars);
+IdleTimePerCar = zeros(1, num_cars);
+for i = 1:num_cars
+    v = CarHistory.(car_ids{i}).v;
+    AvgVelPerCar(i) = sum(v) / length(v);
+    IdleTimePerCar(i) = sum(v < 0.1) * dt;
 end
-
-q = 1:max_cars;
-
+q = 1:num_cars;
 f7 = figure;
 bar(q, AvgVelPerCar);
-title('Average Velocity Per Car');
-xlabel('q (Car Index)');
+title('Average Velocity Per Car (by Car ID)');
+xlabel('Car ID');
 ylabel('Average Velocity (m/s)');
 grid on;
 
 f8 = figure;
 bar(q, IdleTimePerCar);
-title('Idling Time Per Car');
-xlabel('q (Car Index)');
+title('Idling Time Per Car (by Car ID)');
+xlabel('Car ID');
 ylabel('Idling Time (s)');
 grid on;
 
