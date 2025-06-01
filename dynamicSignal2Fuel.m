@@ -257,3 +257,6 @@ title('Idling Time Per Car');
 xlabel('q (Car Index)');
 ylabel('Idling Time (s)');
 grid on;
+
+% Display how many cars entered the simulation
+fprintf('Number of cars that entered the simulation: %d\n', next_car_id - 1);
