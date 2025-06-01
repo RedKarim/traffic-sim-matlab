@@ -229,30 +229,60 @@ ylabel('Total Fuel (mL)');
 grid on;
 xlim([0 num_cars+1]);
 
-% --- Average Velocity and Idling Time Plots by Car ID ---
-AvgVelPerCar = zeros(1, num_cars);
-IdleTimePerCar = zeros(1, num_cars);
+% --- Aggregate by car flow (q = number of cars per minute) ---
+car_entry_times = zeros(1, num_cars);
 for i = 1:num_cars
-    v = CarHistory.(car_ids{i}).v;
-    AvgVelPerCar(i) = sum(v) / length(v);
-    IdleTimePerCar(i) = sum(v < 0.1) * dt;
+    car_entry_times(i) = CarHistory.(car_ids{i}).time(1);
 end
-q = 1:num_cars;
+max_time = max(car_entry_times);
+minute_edges = 0:60:(ceil(max_time/60)*60);
+[~, bin] = histc(car_entry_times, minute_edges);
+num_minutes = length(minute_edges)-1;
+q = zeros(1, num_minutes); % car flow per minute
+AvgVelPerMinute = zeros(1, num_minutes);
+IdleTimePerMinute = zeros(1, num_minutes);
+for m = 1:num_minutes
+    cars_in_minute = find(bin == m);
+    q(m) = length(cars_in_minute);
+    if q(m) > 0
+        avg_vels = zeros(1, q(m));
+        idle_times = zeros(1, q(m));
+        for k = 1:q(m)
+            v = CarHistory.(car_ids{cars_in_minute(k)}).v;
+            avg_vels(k) = sum(v) / length(v);
+            idle_times(k) = sum(v < 0.1) * dt;
+        end
+        AvgVelPerMinute(m) = mean(avg_vels);
+        IdleTimePerMinute(m) = mean(idle_times);
+    else
+        AvgVelPerMinute(m) = NaN;
+        IdleTimePerMinute(m) = NaN;
+    end
+end
+
+% Debugging for f7 and f8
+disp('Debugging f7 and f8 data:');
+disp(['q = ', num2str(q)]);
+disp(['AvgVelPerMinute = ', num2str(AvgVelPerMinute)]);
+disp(['IdleTimePerMinute = ', num2str(IdleTimePerMinute)]);
+
 f7 = figure;
-bar(1:num_cars, AvgVelPerCar);
-title('Average Velocity Per Car (by Car ID)');
-xlabel('Car ID');
+bar(1:num_minutes, AvgVelPerMinute);
+title('Average Velocity vs Car Flow (per minute)');
+xlabel('Minute Interval');
 ylabel('Average Velocity (m/s)');
 grid on;
-xlim([0 num_cars+1]);
+xticks(1:num_minutes);
+xticklabels(q);
 
 f8 = figure;
-bar(1:num_cars, IdleTimePerCar);
-title('Idling Time Per Car (by Car ID)');
-xlabel('Car ID');
-ylabel('Idling Time (s)');
+bar(1:num_minutes, IdleTimePerMinute);
+title('Average Idling Time vs Car Flow (per minute)');
+xlabel('Minute Interval');
+ylabel('Average Idling Time (s)');
 grid on;
-xlim([0 num_cars+1]);
+xticks(1:num_minutes);
+xticklabels(q);
 
 % Display how many cars entered the simulation
 fprintf('Number of cars that entered the simulation: %d\n', next_car_id - 1);
