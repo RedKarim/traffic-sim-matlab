@@ -46,7 +46,7 @@ for t = 1:total_steps
 
     % Spawn new car if it's time
     if mod(current_time, car_spawn_interval) < dt && length(cars) < max_cars
-        new_car = struct('X', 0, 'V', 0, 'A', 0, 'active', true);
+        new_car = struct('X', 0, 'V', 10, 'A', 0, 'active', true);
         cars(next_car_id) = new_car;
         next_car_id = next_car_id + 1;
     end
@@ -140,9 +140,9 @@ end
 %% Align variable-length CarData into matrices for plotting
 numSteps = length(CarData);
 maxCars = max(cellfun(@(c) size(c,2), CarData)) - 1;
-PosData = NaN(numSteps, maxCars);
-VelData = NaN(numSteps, maxCars);
-AccData = NaN(numSteps, maxCars);
+PosData = NaN(numSteps, max_cars);
+VelData = NaN(numSteps, max_cars);
+AccData = NaN(numSteps, max_cars);
 TimeVec = zeros(numSteps,1);
 for i = 1:numSteps
     entry = CarData{i};
@@ -199,7 +199,7 @@ c0 = 0.07224; c1 = 9.681e-2; c2 = 1.075e-3;
 
 % Calculate fuel for each car at each timestep
 for t = 1:length(timeVec)
-    for car = 1:maxCars
+    for car = 1:max_cars
         v = velData(t, car);
         a = accData(t, car);
         if isnan(v) || isnan(a)
@@ -215,11 +215,11 @@ end
 FuelData(isnan(FuelData)) = 0;
 
 f5 = figure;
-plot(timeVec, FuelData(:,1:maxCars));
+plot(timeVec, FuelData(:,1:max_cars));
 title('Fuel Consumption Over Time');
 xlabel('Time (s)');
 ylabel('Fuel Consumption (mL/s)');
-legend(arrayfun(@(n) sprintf('Car %d', n), 1:maxCars, 'UniformOutput', false));
+legend(arrayfun(@(n) sprintf('Car %d', n), 1:max_cars, 'UniformOutput', false));
 grid on;
 
 TotalFuelPerCar = sum(FuelData, 1) * dt;
@@ -233,16 +233,16 @@ grid on;
 
 % --- Average Velocity and Idling Time Plots ---
 % Calculate average velocity per car (ignoring NaNs)
-AvgVelPerCar = zeros(1, maxCars);
-IdleTimePerCar = zeros(1, maxCars);
-for car = 1:maxCars
+AvgVelPerCar = zeros(1, max_cars);
+IdleTimePerCar = zeros(1, max_cars);
+for car = 1:max_cars
     v = VelData(:, car);
     AvgVelPerCar(car) = sum(v(~isnan(v))) / sum(~isnan(v));
     % Idling: count time steps where velocity is (almost) zero
     IdleTimePerCar(car) = sum(v < 0.1 & ~isnan(v)) * dt;
 end
 
-q = 1:maxCars;
+q = 1:max_cars;
 
 f7 = figure;
 bar(q, AvgVelPerCar);
@@ -260,3 +260,5 @@ grid on;
 
 % Display how many cars entered the simulation
 fprintf('Number of cars that entered the simulation: %d\n', next_car_id - 1);
+disp('Cars with nonzero total fuel:');
+disp(find(validCars));
