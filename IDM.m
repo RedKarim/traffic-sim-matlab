@@ -2,7 +2,7 @@ function [acc] = IDM(Xh, Vh, Xp, Vp)
 T = 1.3;
 Vd = 14;
 S0 = 2;
-if(Xh<930 && Xh>700)  
+if(Xh<930 && Xh>700)
     S0 = 2;
 end
 a = 2;
