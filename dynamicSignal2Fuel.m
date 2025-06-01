@@ -227,6 +227,7 @@ title('Total Fuel Consumed Per Car (by Car ID)');
 xlabel('Car ID');
 ylabel('Total Fuel (mL)');
 grid on;
+xlim([0 num_cars+1]);
 
 % --- Average Velocity and Idling Time Plots by Car ID ---
 AvgVelPerCar = zeros(1, num_cars);
@@ -238,18 +239,20 @@ for i = 1:num_cars
 end
 q = 1:num_cars;
 f7 = figure;
-bar(q, AvgVelPerCar);
+bar(1:num_cars, AvgVelPerCar);
 title('Average Velocity Per Car (by Car ID)');
 xlabel('Car ID');
 ylabel('Average Velocity (m/s)');
 grid on;
+xlim([0 num_cars+1]);
 
 f8 = figure;
-bar(q, IdleTimePerCar);
+bar(1:num_cars, IdleTimePerCar);
 title('Idling Time Per Car (by Car ID)');
 xlabel('Car ID');
 ylabel('Idling Time (s)');
 grid on;
+xlim([0 num_cars+1]);
 
 % Display how many cars entered the simulation
 fprintf('Number of cars that entered the simulation: %d\n', next_car_id - 1);
