@@ -240,8 +240,8 @@ grid on;
 
 f6 = figure;
 plot(1:num_cars, TotalFuelPerCar);
-title('Total Fuel Consumed Per Car (by Car ID)');
-xlabel('Car ID');
+title('Total Fuel Consumed Per Car');
+xlabel('q (Vehicle/hour)');
 ylabel('Total Fuel (mL)');
 grid on;
 xlim([0.5, num_cars + 0.5]);
@@ -277,16 +277,10 @@ for m = 1:num_minutes
     end
 end
 
-% Debugging for f7 and f8
-disp('Debugging f7 and f8 data:');
-disp(['q = ', num2str(q)]);
-disp(['AvgVelPerMinute = ', num2str(AvgVelPerMinute)]);
-disp(['IdleTimePerMinute = ', num2str(IdleTimePerMinute)]);
-
 f7 = figure;
 plot(1:num_minutes, AvgVelPerMinute);
-title('Average Velocity vs Car Flow (per minute)');
-xlabel('q (min)');
+title('Average Velocity vs Car Flow ');
+xlabel('q (Vehicle/hour)');
 ylabel('Average Velocity (m/s)');
 grid on;
 xticks(1:num_minutes);
@@ -295,8 +289,8 @@ xlim([0.5, num_minutes + 0.5]);
 
 f8 = figure;
 plot(1:num_minutes, IdleTimePerMinute);
-title('Average Idling Time vs Car Flow (per minute)');
-xlabel('q (min)');
+title('Average Idling Time vs Car Flow ');
+xlabel('q (Vehicle/hour)');
 ylabel('Average Idling Time (s)');
 grid on;
 xticks(1:num_minutes);
