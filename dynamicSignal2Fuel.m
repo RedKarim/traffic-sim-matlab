@@ -2,11 +2,11 @@ close all
 
 % Simulation timing parameters
 simulation_duration = 3000;  % Total simulation time in seconds
-car_spawn_interval = 5;    % Time between car spawns in seconds
+car_spawn_interval = 5;    % Time between car spawns in seconds (will be overridden)
 dt = 0.5;                  % Time step for simulation
 
 % Calculate maximum number of cars based on simulation parameters
-max_cars = ceil(simulation_duration / car_spawn_interval);  % Maximum number of cars that can spawn in the simulation
+max_cars = ceil(simulation_duration / 4);  % Using minimum interval (4s) for conservative estimate
 
 % Initialize car tracking
 cars = struct('X', {}, 'V', {}, 'A', {}, 'active', {}, 'id', {});
@@ -58,10 +58,14 @@ while true
     pause(0);
 
     % Spawn new car if it's time and simulation duration hasn't ended
-    if current_time <= simulation_duration && mod(current_time, car_spawn_interval) < dt && length(cars) < max_cars
-        new_car = struct('X', 0, 'V', 10, 'A', 0, 'active', true, 'id', next_car_id);
-        cars(next_car_id) = new_car;
-        next_car_id = next_car_id + 1;
+    if current_time <= simulation_duration && length(cars) < max_cars
+        % Generate random interval between 4 and 6 seconds
+        random_interval = 4 + 2 * rand();
+        if mod(current_time, random_interval) < dt
+            new_car = struct('X', 0, 'V', 10, 'A', 0, 'active', true, 'id', next_car_id);
+            cars(next_car_id) = new_car;
+            next_car_id = next_car_id + 1;
+        end
     end
 
     % Traffic signal logic
