@@ -1,7 +1,7 @@
 close all
 
 % Simulation timing parameters
-simulation_duration = 6000;  % Total simulation time in seconds
+simulation_duration = 3000;  % Total simulation time in seconds
 car_spawn_interval = 5;    % Time between car spawns in seconds
 dt = 0.5;                  % Time step for simulation
 
@@ -55,7 +55,7 @@ t = 0;
 while true
     t = t + 1;
     current_time = t * dt;
-    pause(0.000001);
+    pause(0);
 
     % Spawn new car if it's time and simulation duration hasn't ended
     if current_time <= simulation_duration && mod(current_time, car_spawn_interval) < dt && length(cars) < max_cars
