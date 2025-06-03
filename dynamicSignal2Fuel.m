@@ -1,8 +1,8 @@
 close all
 
 % Simulation timing parameters
-simulation_duration = 600;  % Total simulation time in seconds
-car_spawn_interval = 3;    % Time between car spawns in seconds
+simulation_duration = 6000;  % Total simulation time in seconds
+car_spawn_interval = 5;    % Time between car spawns in seconds
 dt = 0.5;                  % Time step for simulation
 
 % Calculate maximum number of cars based on simulation parameters
@@ -47,12 +47,18 @@ CarHistory = struct();
 b0 = 0.156;  b1 = 2.450e-2;  b2 = -7.415e-4;  b3 = 5.975e-5;
 c0 = 0.07224; c1 = 9.681e-2; c2 = 1.075e-3;
 
-for t = 1:total_steps
-    current_time = t * dt;
-    pause(0.01);
+% Initialize simulation time
+current_time = 0;
+t = 0;
 
-    % Spawn new car if it's time
-    if mod(current_time, car_spawn_interval) < dt && length(cars) < max_cars
+% Main simulation loop
+while true
+    t = t + 1;
+    current_time = t * dt;
+    pause(0.000001);
+
+    % Spawn new car if it's time and simulation duration hasn't ended
+    if current_time <= simulation_duration && mod(current_time, car_spawn_interval) < dt && length(cars) < max_cars
         new_car = struct('X', 0, 'V', 10, 'A', 0, 'active', true, 'id', next_car_id);
         cars(next_car_id) = new_car;
         next_car_id = next_car_id + 1;
@@ -139,7 +145,7 @@ for t = 1:total_steps
     V_plot = [];
     A_plot = [];
     for n = active_cars
-        if cars(n).X > 1000
+        if cars(n).X > 700  % Changed from 1000 to 700 to match the axis limit
             cars(n).active = false;
             continue;
         end
@@ -147,7 +153,7 @@ for t = 1:total_steps
         cars(n).V = cars(n).V + cars(n).A * dt;
         cars(n).V = max(cars(n).V, 0);
         cars(n).A = min(max(cars(n).A, -8), 2);
-        if cars(n).X >= 0 && cars(n).X <= 1000 && cars(n).active
+        if cars(n).X >= 0 && cars(n).X <= 700 && cars(n).active  % Changed from 1000 to 700
             X_plot(end+1) = cars(n).X;
             V_plot(end+1) = cars(n).V;
             A_plot(end+1) = cars(n).A;
@@ -156,6 +162,11 @@ for t = 1:total_steps
     delete(p);
     CarData{end+1} = [current_time, X_plot, V_plot, A_plot];
     p = plot(X_plot, ones(size(X_plot))*5, 'sr', 'MarkerSize', 10, 'MarkerFaceColor', [0.5, 0.1, 1]);
+
+    % Check if all cars have exited the simulation
+    if current_time > simulation_duration && isempty(active_cars)
+        break;
+    end
 end
 
 %% Align variable-length CarData into matrices for plotting
